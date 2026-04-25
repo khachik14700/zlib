@@ -71,7 +71,8 @@ std::vector<uint8_t> LZ77::decompress(const std::vector<Token>& input)
             size_t start = output.size() - token.offset;
             for (size_t i = 0; i < token.length; i++)
             {
-                output.emplace_back(output[start + i]);
+                uint8_t byte = output[start + i];
+                output.emplace_back(byte);
             }
             if (token.next != 0)
             {

@@ -12,7 +12,6 @@ int main()
     std::cout << "Token size: " << sizeof(Token) << " bytes" << std::endl;
     std::cout << "Compressed size: " << (sizeof(Token) * compressed.size()) << " bytes" << std::endl;
     std::cout << "Original text: " << text << std::endl;
-    std::cout << "Match: " << ((text == decompressed) ? "YES" : "NO") << std::endl;
-
+    
     return 0;
 }

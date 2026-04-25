@@ -27,6 +27,11 @@ struct Compare
 
 Node* buildTree(const std::map<uint8_t, uint32_t>& freq)
 {
+    if (freq.empty())
+    {
+        throw std::runtime_error("Huffman: empty frequency table.");
+    }
+
     std::priority_queue<Node*, std::vector<Node*>, Compare> pq;
     for (const auto& pair: freq)
     {
@@ -90,7 +95,9 @@ std::vector<uint8_t> Huffman::compress(const std::vector<uint8_t>& input)
     std::map<uint8_t, std::string> codes;
     buildCodes(root, "", codes);
 
-    output.emplace_back(static_cast<uint8_t>(freq.size()));
+    uint16_t num = freq.size();
+    output.emplace_back((num >> 8) & 0xFF);
+    output.emplace_back((num >> 0) & 0xFF);
     for (const auto& pair: freq)
     {
         output.emplace_back(pair.first);
@@ -150,8 +157,9 @@ std::vector<uint8_t> Huffman::decompress(const std::vector<uint8_t>& input)
     if (input.size() < 2)
         throw std::runtime_error("Huffman decompress: input too short.");
     int padding = input[pos++];
-    uint8_t num_symbol = input[pos++];
-    for(uint8_t i = 0; i < num_symbol; i++)
+    uint16_t num_symbol = (input[pos] << 8) | input[pos + 1];
+    pos += 2;
+    for(uint16_t i = 0; i < num_symbol; i++)
     {
         if (pos + 5 > input.size())
             throw std::runtime_error("Huffman decompress: corrupted frequency table.");
@@ -167,6 +175,20 @@ std::vector<uint8_t> Huffman::decompress(const std::vector<uint8_t>& input)
     int read_bits = 0;
 
     Node* current = root;
+
+    if (!root->left && !root->right)
+    {
+        uint32_t count = root->freq;
+
+        for (uint32_t i = 0; i < count; i++)
+        {
+            output.emplace_back(root->byte);
+        }
+
+        deleteTree(root);
+        return output;
+    }
+
     while (read_bits < total_bits)
     {
         for (int bit = 7; bit >= 0; bit--)
