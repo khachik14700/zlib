@@ -147,10 +147,14 @@ std::vector<uint8_t> Huffman::decompress(const std::vector<uint8_t>& input)
     }
 
     size_t pos = 0;
+    if (input.size() < 2)
+        throw std::runtime_error("Huffman decompress: input too short.");
     int padding = input[pos++];
     uint8_t num_symbol = input[pos++];
     for(uint8_t i = 0; i < num_symbol; i++)
     {
+        if (pos + 5 > input.size())
+            throw std::runtime_error("Huffman decompress: corrupted frequency table.");
         uint8_t symbol = input[pos++];
         uint8_t byte0 = input[pos++];
         uint8_t byte1 = input[pos++];
@@ -178,6 +182,8 @@ std::vector<uint8_t> Huffman::decompress(const std::vector<uint8_t>& input)
             {
                 current = current->left;
             }
+            if (!current)
+                throw std::runtime_error("Huffman decompress: corrupted data, tree traversal failed.");
             read_bits++;
             if (!current->left && !current->right)
             {
